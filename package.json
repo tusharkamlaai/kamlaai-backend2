@@ -1,0 +1,29 @@
+  {
+  "name": "job-portal-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+
+  "dependencies": {
+    "@supabase/supabase-js": "^2.54.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "google-auth-library": "^10.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "nanoid": "^5.1.5",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.16"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
