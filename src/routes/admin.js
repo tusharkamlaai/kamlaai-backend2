@@ -43,4 +43,18 @@ router.get('/stats', requireAuth, requireAdmin, async (_req, res) => {
   res.json(data);
 });
 
+
+// Add this to src/routes/admin.js
+router.get('/applications/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { data, error } = await supabaseService
+    .from('applications_admin_view') // Reuse the existing view
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Application not found' });
+  res.json({ application: data });
+});
+
 export default router;
