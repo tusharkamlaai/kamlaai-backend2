@@ -40,6 +40,7 @@ create table if not exists public.applications (
   cover_letter text,
   location text,
   city text,
+  experience text
   education text,
   position_applying text,
   resume_path text,

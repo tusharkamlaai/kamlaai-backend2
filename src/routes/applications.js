@@ -20,6 +20,7 @@ router.post('/', requireAuth, uploadPdf.single('resume'), async (req, res) => {
       cover_letter: z.string().optional(),
       location: z.string().optional(),
       city: z.string().optional(),
+      experience: z.string().optional(),
       education: z.string().optional(),
       position_applying: z.string().optional()
     });
