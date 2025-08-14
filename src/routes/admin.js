@@ -57,4 +57,30 @@ router.get('/applications/:id', requireAuth, requireAdmin, async (req, res) => {
   res.json({ application: data });
 });
 
+
+
+router.delete('/applications/:id', requireAuth, requireAdmin, async (req, res) => {
+  // 1. Delete the resume file from storage (if exists)
+  const { data: app, error: fetchError } = await supabaseService
+    .from('applications')
+    .select('resume_path')
+    .eq('id', req.params.id)
+    .single();
+
+  if (fetchError) return res.status(404).json({ error: 'Application not found' });
+
+  if (app.resume_path) {
+    await supabaseService.storage.from('resumes').remove([app.resume_path]);
+  }
+
+  // 2. Delete the application record
+  const { error } = await supabaseService
+    .from('applications')
+    .delete()
+    .eq('id', req.params.id);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 export default router;
