@@ -91,7 +91,7 @@ router.get("/my-applications", requireAuth, async (req, res) => {
     const { data: jobs, error: jobsErr } = await supabaseService
       .from("jobs")
       .select(
-        "id, title, description, requirements, skills, location,experience, salary_range, is_active, posted_by, created_at, updated_at"
+        "id, title, description, requirements, skills, location, salary_range, is_active, posted_by, created_at, updated_at"
       )
       .in("id", jobIds);
 
