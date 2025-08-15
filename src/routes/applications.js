@@ -71,41 +71,40 @@ router.post("/", requireAuth, uploadPdf.single("resume"), async (req, res) => {
 
 // current user's applications
 // current user's applied job posts (not application fields)
-router.get("/my-applications", requireAuth, async (req, res) => {
+// current user's applications - adds ONLY status to existing response
+router.get('/my-applications', requireAuth, async (req, res) => {
   try {
-    // 1) Get the user's applications (only job_id + applied_at)
-    const { data: apps, error: appsErr } = await supabaseService
-      .from("applications")
-      .select("job_id, applied_at")
-      .eq("user_id", req.user.id)
-      .order("applied_at", { ascending: false });
+    // 1. First get the original job listings exactly as before
+    const { data: jobs, error: jobsError } = await supabaseService
+      .from('jobs_public')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    if (appsErr) return res.status(500).json({ error: appsErr.message });
-    if (!apps || apps.length === 0) return res.json({ jobs: [] });
+    if (jobsError) throw jobsError;
 
-    // keep order by applied_at (latest first)
-    const orderByApplied = apps.map((a) => a.job_id);
-    const jobIds = [...new Set(orderByApplied)];
+    // 2. Get application status for each job (if user applied)
+    const { data: applications, error: appsError } = await supabaseService
+      .from('applications')
+      .select('job_id, status')
+      .eq('user_id', req.user.id);
 
-    // 2) Fetch those job posts (service role → includes inactive too)
-    const { data: jobs, error: jobsErr } = await supabaseService
-      .from("jobs")
-      .select(
-        "id, title, description, requirements, skills, location, salary_range, is_active, posted_by, created_at, updated_at"
-      )
-      .in("id", jobIds);
+    if (appsError) throw appsError;
 
-    if (jobsErr) return res.status(500).json({ error: jobsErr.message });
+    // 3. Create a map of job_id -> status for quick lookup
+    const statusMap = {};
+    applications.forEach(app => {
+      statusMap[app.job_id] = app.status;
+    });
 
-    // 3) Sort jobs to match applied_at order
-    const byId = new Map(jobs.map((j) => [j.id, j]));
-    const orderedJobs = orderByApplied
-      .map((id) => byId.get(id))
-      .filter(Boolean);
+    // 4. Add status to each job WITHOUT changing other fields
+    const jobsWithStatus = jobs.map(job => ({
+      ...job, // Keep all original fields exactly as they were
+      status: statusMap[job.id] || 'not_applied' // ONLY added field
+    }));
 
-    return res.json({ jobs: orderedJobs });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+    res.json({ applications: jobsWithStatus });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -151,3 +150,60 @@ router.delete("/:id/resume", requireAuth, async (req, res) => {
 });
 
 export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// router.get("/my-applications", requireAuth, async (req, res) => {
+//   try {
+//     // 1) Get the user's applications (only job_id + applied_at)
+//     const { data: apps, error: appsErr } = await supabaseService
+//       .from("applications")
+//       .select("job_id, applied_at")
+//       .eq("user_id", req.user.id)
+//       .order("applied_at", { ascending: false });
+
+//     if (appsErr) return res.status(500).json({ error: appsErr.message });
+//     if (!apps || apps.length === 0) return res.json({ jobs: [] });
+
+//     // keep order by applied_at (latest first)
+//     const orderByApplied = apps.map((a) => a.job_id);
+//     const jobIds = [...new Set(orderByApplied)];
+
+//     // 2) Fetch those job posts (service role → includes inactive too)
+//     const { data: jobs, error: jobsErr } = await supabaseService
+//       .from("jobs")
+//       .select(
+//         "id, title, description, requirements, skills, location, salary_range, is_active, posted_by, created_at, updated_at"
+//       )
+//       .in("id", jobIds);
+
+//     if (jobsErr) return res.status(500).json({ error: jobsErr.message });
+
+//     // 3) Sort jobs to match applied_at order
+//     const byId = new Map(jobs.map((j) => [j.id, j]));
+//     const orderedJobs = orderByApplied
+//       .map((id) => byId.get(id))
+//       .filter(Boolean);
+
+//     return res.json({ jobs: orderedJobs });
+//   } catch (e) {
+//     return res.status(500).json({ error: e.message });
+//   }
+// });
